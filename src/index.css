@@ -5,3 +5,12 @@
 body {
   @apply bg-black;
 }
+
+@layer components {
+  .btn {
+    @apply py-3 px-8 rounded-lg bg-purple-500;
+  }
+  .input {
+    @apply border-2 bg-gray-800 border-gray-700 rounded-lg p-2 w-full;
+  }
+}
