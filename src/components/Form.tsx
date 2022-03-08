@@ -1,67 +1,23 @@
+import { navigate } from "raviger";
 import React, { useEffect, useRef, useState } from "react";
-
-interface FormProps {
-  id: number;
-  onClose: () => void;
-}
-
-interface FormField {
-  id: number;
-  label: string;
-  type: string;
-  value: string;
-}
-
-interface FormData {
-  id: number;
-  title: string;
-  formFields: FormField[];
-}
+import { FormProps } from "../types/forms.types";
+import {
+  getFromLocalStorage,
+  initialFormField,
+  saveToLocalStorage,
+} from "../utils/storageUtils";
 
 export const FORM_DATA_KEY = "formData";
 
-const initialFormField: FormField[] = [
-  { id: 1, label: "First Name", type: "text", value: "" },
-  { id: 2, label: "Last Name", type: "text", value: "" },
-  { id: 3, label: "Email", type: "email", value: "" },
-  { id: 4, label: "Date of Birth", type: "date", value: "" },
-];
-
-export const getForms = () => {
-  const rawForms = localStorage.getItem(FORM_DATA_KEY);
-  const forms = (rawForms ? JSON.parse(rawForms) : []) as FormData[];
-  return forms;
-};
-
-const saveToLocalStorage = (formField: FormData) => {
-  const localForms = getForms();
-
-  const filteredLocalForms = localForms.filter(
-    (form) => form.id !== formField.id
-  );
-
-  localStorage.setItem(
-    FORM_DATA_KEY,
-    JSON.stringify([...filteredLocalForms, formField])
-  );
-};
-
-const getFromLocalStorage = (id: number): FormData => {
-  const forms = getForms();
-
-  const existingForm = forms.find((form) => form.id === id);
-
-  return existingForm
-    ? existingForm
-    : {
+export const Form: React.FC<FormProps> = ({ id }) => {
+  const [formData, setFormData] = useState(
+    () =>
+      getFromLocalStorage(id) || {
         id,
         title: "Untitled Form",
         formFields: initialFormField,
-      };
-};
-
-export const Form: React.FC<FormProps> = ({ onClose, id }) => {
-  const [formData, setFormData] = useState(() => getFromLocalStorage(id));
+      }
+  );
   const [newField, setNewField] = React.useState("");
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -143,18 +99,17 @@ export const Form: React.FC<FormProps> = ({ onClose, id }) => {
             setFormData((prev) => ({
               ...prev,
               formFields: prev.formFields.map((field) =>
-                field.id === id ? { ...field, value: e.target.value } : field
+                field.id === id ? { ...field, label: e.target.value } : field
               ),
             }));
           };
           return (
             <div key={id} className="flex flex-col my-2 mb-4">
-              <label className="text-left mb-2">{label}</label>
               <div className="flex gap-4 items-stretch">
                 <input
                   className="input"
                   type={type}
-                  value={value}
+                  value={label}
                   onChange={handleInputValueChange}
                 />
                 <button
@@ -185,7 +140,10 @@ export const Form: React.FC<FormProps> = ({ onClose, id }) => {
       </div>
 
       <div className="flex gap-2 justify-between">
-        <button className="btn flex-1 bg-gray-800 mb-8 p-2" onClick={onClose}>
+        <button
+          className="btn flex-1 bg-gray-800 mb-8 p-2"
+          onClick={() => navigate("/")}
+        >
           Close
         </button>
         <button
@@ -200,6 +158,14 @@ export const Form: React.FC<FormProps> = ({ onClose, id }) => {
         >
           Save
         </button>
+        {formData.formFields.length && (
+          <button
+            className="btn bg-indigo-500 mb-8 p-2 flex-1"
+            onClick={(_) => navigate(`/forms/${id}/preview`)}
+          >
+            Preview
+          </button>
+        )}
 
         <button className="btn mb-8 p-2 flex-1">Submit</button>
       </div>
