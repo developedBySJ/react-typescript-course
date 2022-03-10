@@ -10,5 +10,9 @@ export const Home = () => {
     return () => {};
   }, []);
 
-  return <div className="mb-4"></div>;
+  return (
+    <div className="mb-4">
+      <input type="" />
+    </div>
+  );
 };

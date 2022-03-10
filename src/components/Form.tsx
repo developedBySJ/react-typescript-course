@@ -1,15 +1,22 @@
 import { navigate } from "raviger";
 import React, { useEffect, useRef, useState } from "react";
+import { Field, InputType, KIND, KindType } from "../types/field.type";
 import { FormProps } from "../types/forms.types";
 import {
   getFromLocalStorage,
   initialFormField,
   saveToLocalStorage,
 } from "../utils/storageUtils";
+import { InputFieldPreview } from "./previewField/InputFieldPreview";
+import { LongTextPreview } from "./previewField/LongTextPreview";
+import { RadioPreview } from "./previewField/RadioPreview";
+import { Selector } from "./previewField/Selector";
+import { SelectorPreview } from "./previewField/SelectorPreview";
 
 export const FORM_DATA_KEY = "formData";
 
 export const Form: React.FC<FormProps> = ({ id }) => {
+  const [kind, setKind] = useState<typeof KIND[number]>("text");
   const [formData, setFormData] = useState(
     () =>
       getFromLocalStorage(id) || {
@@ -33,9 +40,15 @@ export const Form: React.FC<FormProps> = ({ id }) => {
         {
           id: new Date().getTime(),
           label: newField,
-          type: "text",
+          ...(kind === "text" && {
+            type: "text",
+          }),
+          ...(kind === "dropdown" && {
+            type: "single",
+          }),
+          kind,
           value: "",
-        },
+        } as Field,
       ],
     }));
     setNewField("");
@@ -92,7 +105,7 @@ export const Form: React.FC<FormProps> = ({ id }) => {
         onChange={handleTitleChange}
       />
       <div className="border-b border-gray-700 py-2 mb-4">
-        {formData.formFields.map(({ id, label, type, value }) => {
+        {formData.formFields.map(({ id, label, value, ...other }) => {
           const handleInputValueChange = (
             e: React.ChangeEvent<HTMLInputElement>
           ) => {
@@ -103,35 +116,107 @@ export const Form: React.FC<FormProps> = ({ id }) => {
               ),
             }));
           };
+
+          const handleInputRequiredChange = (
+            e: React.ChangeEvent<HTMLInputElement>
+          ) => {
+            setFormData((prev) => ({
+              ...prev,
+              formFields: prev.formFields.map((field) =>
+                field.id === id
+                  ? { ...field, required: !!e.target.checked }
+                  : field
+              ),
+            }));
+          };
+
+          const handleInputTypeChange = (
+            e: React.ChangeEvent<HTMLSelectElement>
+          ) => {
+            setFormData((prev) => ({
+              ...prev,
+              formFields: prev.formFields.map((field) =>
+                field.id === id
+                  ? { ...field, type: e.target.value as any }
+                  : field
+              ),
+            }));
+          };
+          const handleInputOptionsChange = (options: string[]) => {
+            // console.log(options);
+            setFormData((prev) => ({
+              ...prev,
+              formFields: prev.formFields.map((field) =>
+                field.id === id ? { ...field, options } : field
+              ),
+            }));
+          };
           return (
-            <div key={id} className="flex flex-col my-2 mb-4">
-              <div className="flex gap-4 items-stretch">
-                <input
-                  className="input"
-                  type={type}
-                  value={label}
-                  onChange={handleInputValueChange}
+            <div key={id}>
+              {other.kind === "text" && (
+                <InputFieldPreview
+                  handleRemove={handleInputFieldRemoveClick(id)}
+                  setRequired={handleInputRequiredChange}
+                  setType={handleInputTypeChange}
+                  label={label}
+                  type={other.type as InputType}
+                  required={other.required}
+                  setLabel={handleInputValueChange}
                 />
-                <button
-                  className="btn p-2 px-4 bg-gray-700"
-                  onClick={handleInputFieldRemoveClick(id)}
-                >
-                  X
-                </button>
-              </div>
+              )}
+              {other.kind === "dropdown" && (
+                <SelectorPreview
+                  handleRemove={handleInputFieldRemoveClick(id)}
+                  setOptions={handleInputOptionsChange}
+                  options={other.options || []}
+                  required={other.required}
+                  setRequired={handleInputRequiredChange}
+                  setType={handleInputTypeChange}
+                  label={label}
+                  type={other.type as InputType}
+                  setLabel={handleInputValueChange}
+                />
+              )}
+              {other.kind === "radio" && (
+                <RadioPreview
+                  handleRemove={handleInputFieldRemoveClick(id)}
+                  setOptions={handleInputOptionsChange}
+                  options={other.options || []}
+                  required={other.required}
+                  setRequired={handleInputRequiredChange}
+                  setType={handleInputTypeChange}
+                  label={label}
+                  setLabel={handleInputValueChange}
+                />
+              )}
+              {other.kind === "longText" && (
+                <LongTextPreview
+                  handleRemove={handleInputFieldRemoveClick(id)}
+                  required={other.required}
+                  setRequired={handleInputRequiredChange}
+                  label={label}
+                  setLabel={handleInputValueChange}
+                />
+              )}
             </div>
           );
         })}
       </div>
 
       <div className="flex flex-col">
-        <label className="text-left mb-2">Add New Field</label>
+        <label className="text-left mb-2 flex-1">Add New Field</label>
         <div className="flex gap-4 items-stretch mb-8">
           <input
             className="input"
             type="text"
             value={newField}
             onChange={handleNewFieldChange}
+          />
+          <Selector
+            options={[...KIND]}
+            value={kind}
+            setValue={(e) => setKind(e.target.value as KindType)}
+            className="input"
           />
           <button className="btn" onClick={handleNewFieldAddClick}>
             Add

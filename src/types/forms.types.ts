@@ -1,3 +1,5 @@
+import { Field } from "./field.type";
+
 export interface FormProps {
   id: number;
   // onClose: () => void;
@@ -13,5 +15,5 @@ export interface FormField {
 export interface FormData {
   id: number;
   title: string;
-  formFields: FormField[];
+  formFields: Field[];
 }

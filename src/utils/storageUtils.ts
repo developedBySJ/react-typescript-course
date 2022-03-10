@@ -1,11 +1,12 @@
 import { FORM_DATA_KEY } from "../components/Form";
-import { FormData, FormField } from "../types/forms.types";
+import { Field } from "../types/field.type";
+import { FormData } from "../types/forms.types";
 
-export const initialFormField: FormField[] = [
-  { id: 1, label: "First Name", type: "text", value: "" },
-  { id: 2, label: "Last Name", type: "text", value: "" },
-  { id: 3, label: "Email", type: "email", value: "" },
-  { id: 4, label: "Date of Birth", type: "date", value: "" },
+export const initialFormField: Field[] = [
+  { id: 1, kind: "text", label: "First Name", type: "text", value: "" },
+  { id: 2, kind: "text", label: "Last Name", type: "text", value: "" },
+  { id: 3, kind: "text", label: "Email", type: "email", value: "" },
+  { id: 4, kind: "text", label: "Date of Birth", type: "date", value: "" },
 ];
 
 export const getForms = () => {
