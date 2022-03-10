@@ -108,7 +108,7 @@ export const Form: React.FC<FormProps> = ({ id }) => {
               <div className="flex gap-4 items-stretch">
                 <input
                   className="input"
-                  type={type}
+                  type="text"
                   value={label}
                   onChange={handleInputValueChange}
                 />

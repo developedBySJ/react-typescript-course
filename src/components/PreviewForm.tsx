@@ -5,9 +5,22 @@ interface PreviewFormProps {
   id: number;
 }
 
+interface AnsState {
+  id: number;
+  ans: string;
+  question: string;
+}
+
 export const PreviewForm: React.FC<PreviewFormProps> = ({ id }) => {
   const form = getFromLocalStorage(id);
-  const [ans, setAns] = useState<{ [key: string]: string }>({});
+  const [ans, setAns] = useState<AnsState[]>(
+    () =>
+      form?.formFields.map(({ id, label }) => ({
+        id,
+        question: label,
+        ans: "",
+      })) || []
+  );
 
   const [curQuestion, setCurQuestion] = useState(0);
 
@@ -16,6 +29,14 @@ export const PreviewForm: React.FC<PreviewFormProps> = ({ id }) => {
   }
 
   const question = form.formFields[curQuestion];
+
+  const handleValue = (value: string) => {
+    setAns((prev) =>
+      prev.map((a) => (a.id === question.id ? { ...a, ans: value } : a))
+    );
+  };
+
+  const value = ans.find((a) => a.id === question.id)?.ans || "";
 
   return (
     <div>
@@ -26,13 +47,8 @@ export const PreviewForm: React.FC<PreviewFormProps> = ({ id }) => {
           type={question.type}
           className="input"
           required
-          value={ans[question.id] || ""}
-          onChange={(e) => {
-            setAns({
-              ...ans,
-              [question.id]: e.target.value,
-            });
-          }}
+          value={value}
+          onChange={(e) => handleValue(e.target.value)}
         />
       </div>
       <div className="flex items-center justify-between">
