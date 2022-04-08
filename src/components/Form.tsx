@@ -1,6 +1,25 @@
 import { navigate } from "raviger";
-import React, { useEffect, useRef, useState } from "react";
-import { Field, InputType, KIND, KindType } from "../types/field.type";
+import React, { useEffect, useRef } from "react";
+import {
+  addInputField,
+  clearForm,
+  removeInputField,
+  setFormTitle,
+  setInputField,
+  setInputFieldOptions,
+  setInputFieldRequired,
+  setInputFieldType,
+  setKind,
+  setNewField,
+} from "../store/action/form.action";
+import { formReducer } from "../store/reducers/form.reducer";
+import {
+  Field,
+  FieldType,
+  InputType,
+  KIND,
+  KindType,
+} from "../types/field.type";
 import { FormProps } from "../types/forms.types";
 import {
   getFromLocalStorage,
@@ -16,64 +35,48 @@ import { SelectorPreview } from "./previewField/SelectorPreview";
 export const FORM_DATA_KEY = "formData";
 
 export const Form: React.FC<FormProps> = ({ id }) => {
-  const [kind, setKind] = useState<typeof KIND[number]>("text");
-  const [formData, setFormData] = useState(
-    () =>
-      getFromLocalStorage(id) || {
+  const [{ kind, newField, formData }, dispatch] = React.useReducer(
+    formReducer,
+    {
+      newField: "",
+      kind: "text",
+      formData: getFromLocalStorage(id) || {
         id,
         title: "Untitled Form",
         formFields: initialFormField,
-      }
+      },
+    }
   );
-  const [newField, setNewField] = React.useState("");
+
   const titleRef = useRef<HTMLInputElement>(null);
 
-  const handleNewFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewField(e.target.value);
-  };
+  const handleNewFieldChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    dispatch(setNewField(e.target.value));
 
   const handleNewFieldAddClick = () => {
-    setFormData((prev) => ({
-      ...prev,
-      formFields: [
-        ...prev.formFields,
-        {
-          id: new Date().getTime(),
-          label: newField,
-          ...(kind === "text" && {
-            type: "text",
-          }),
-          ...(kind === "dropdown" && {
-            type: "single",
-          }),
-          kind,
-          value: "",
-        } as Field,
-      ],
-    }));
-    setNewField("");
+    const newInputField = {
+      id: new Date().getTime(),
+      label: newField,
+      ...(kind === "text" && {
+        type: "text",
+      }),
+      ...(kind === "dropdown" && {
+        type: "single",
+      }),
+      kind,
+      value: "",
+    } as Field;
+    dispatch(addInputField(newInputField));
+    dispatch(setNewField(""));
   };
 
-  const handleInputFieldRemoveClick = (id: number) => () => {
-    setFormData((prev) => ({
-      ...prev,
-      formFields: prev.formFields.filter((field) => field.id !== id),
-    }));
-  };
+  const handleInputFieldRemoveClick = (id: number) => () =>
+    dispatch(removeInputField(id));
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      title: e.target.value,
-    }));
-  };
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    dispatch(setFormTitle(e.target.value));
 
-  const handleClearFormClick = () => {
-    setFormData((prev) => ({
-      ...prev,
-      formFields: prev.formFields.map((field) => ({ ...field, value: "" })),
-    }));
-  };
+  const handleClearFormClick = () => dispatch(clearForm());
 
   useEffect(() => {
     const tId = setTimeout(() => {
@@ -108,49 +111,28 @@ export const Form: React.FC<FormProps> = ({ id }) => {
         {formData.formFields.map(({ id, label, value, ...other }) => {
           const handleInputValueChange = (
             e: React.ChangeEvent<HTMLInputElement>
-          ) => {
-            setFormData((prev) => ({
-              ...prev,
-              formFields: prev.formFields.map((field) =>
-                field.id === id ? { ...field, label: e.target.value } : field
-              ),
-            }));
-          };
+          ) => dispatch(setInputField({ id, value: e.target.value }));
 
           const handleInputRequiredChange = (
             e: React.ChangeEvent<HTMLInputElement>
-          ) => {
-            setFormData((prev) => ({
-              ...prev,
-              formFields: prev.formFields.map((field) =>
-                field.id === id
-                  ? { ...field, required: !!e.target.checked }
-                  : field
-              ),
-            }));
-          };
+          ) =>
+            dispatch(
+              setInputFieldRequired({
+                id,
+                required: e.target.checked,
+              })
+            );
 
           const handleInputTypeChange = (
             e: React.ChangeEvent<HTMLSelectElement>
-          ) => {
-            setFormData((prev) => ({
-              ...prev,
-              formFields: prev.formFields.map((field) =>
-                field.id === id
-                  ? { ...field, type: e.target.value as any }
-                  : field
-              ),
-            }));
-          };
-          const handleInputOptionsChange = (options: string[]) => {
-            // console.log(options);
-            setFormData((prev) => ({
-              ...prev,
-              formFields: prev.formFields.map((field) =>
-                field.id === id ? { ...field, options } : field
-              ),
-            }));
-          };
+          ) =>
+            dispatch(
+              setInputFieldType({ id, type: e.target.value as FieldType })
+            );
+
+          const handleInputOptionsChange = (options: string[]) =>
+            dispatch(setInputFieldOptions({ id, options }));
+
           return (
             <div key={id}>
               {other.kind === "text" && (
@@ -215,7 +197,7 @@ export const Form: React.FC<FormProps> = ({ id }) => {
           <Selector
             options={[...KIND]}
             value={kind}
-            setValue={(e) => setKind(e.target.value as KindType)}
+            setValue={(e) => dispatch(setKind(e.target.value as KindType))}
             className="input"
           />
           <button className="btn" onClick={handleNewFieldAddClick}>
@@ -243,14 +225,14 @@ export const Form: React.FC<FormProps> = ({ id }) => {
         >
           Save
         </button>
-        {formData.formFields.length && (
+        {formData.formFields.length ? (
           <button
             className="btn bg-indigo-500 mb-8 p-2 flex-1"
             onClick={(_) => navigate(`/forms/${id}/preview`)}
           >
             Preview
           </button>
-        )}
+        ) : null}
 
         <button className="btn mb-8 p-2 flex-1">Submit</button>
       </div>

@@ -45,7 +45,7 @@ export interface LongTextField extends BaseField {
 }
 
 export type Field = InputField | SelectField | RadioField | LongTextField;
-
+export type FieldType = SelectType | InputType;
 export const KIND = ["text", "dropdown", "radio", "longText"] as const;
 
 export type KindType = typeof KIND[number];
