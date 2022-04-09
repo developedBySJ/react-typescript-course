@@ -1,93 +1,92 @@
 import { navigate } from "raviger";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  addInputField,
-  clearForm,
-  removeInputField,
-  setFormTitle,
-  setInputField,
-  setInputFieldOptions,
-  setInputFieldRequired,
-  setInputFieldType,
-  setKind,
-  setNewField,
-} from "../store/action/form.action";
-import { formReducer } from "../store/reducers/form.reducer";
-import {
-  Field,
-  FieldType,
-  InputType,
-  KIND,
-  KindType,
-} from "../types/field.type";
+  createFormField,
+  deleteFormFields,
+  getForm,
+  getFormFields,
+  updateForm,
+  updateFormField,
+} from "../api/form";
+import { Pagination } from "../types/api.action";
 import { FormProps } from "../types/forms.types";
-import {
-  getFromLocalStorage,
-  initialFormField,
-  saveToLocalStorage,
-} from "../utils/storageUtils";
+import { FieldModel, FormModel, KindEnum } from "../types/model";
 import { InputFieldPreview } from "./previewField/InputFieldPreview";
-import { LongTextPreview } from "./previewField/LongTextPreview";
 import { RadioPreview } from "./previewField/RadioPreview";
 import { Selector } from "./previewField/Selector";
 import { SelectorPreview } from "./previewField/SelectorPreview";
+import { Spinner } from "./Spinner";
 
 export const FORM_DATA_KEY = "formData";
 
-export const Form: React.FC<FormProps> = ({ id }) => {
-  const [{ kind, newField, formData }, dispatch] = React.useReducer(
-    formReducer,
-    {
-      newField: "",
-      kind: "text",
-      formData: getFromLocalStorage(id) || {
-        id,
-        title: "Untitled Form",
-        formFields: initialFormField,
-      },
-    }
+const MapComp: React.FC<{
+  field: FieldModel;
+  onRemove: () => void;
+  form_pk?: number;
+}> = ({ field, onRemove, form_pk }) => {
+  const [fieldLabel, setFieldLabel] = useState(field.label);
+  const [options, setOptions] = useState<string[]>(field?.options || []);
+  useEffect(() => {
+    const tid = setTimeout(async () => {
+      if (form_pk) {
+        const fieldOptions = [KindEnum.RADIO, KindEnum.DROPDOWN].includes(
+          field.kind
+        )
+          ? options || null
+          : null;
+        await updateFormField({
+          form_pk,
+          payload: { ...field, label: fieldLabel, options: fieldOptions },
+        });
+      }
+    }, 500);
+    return () => clearTimeout(tid);
+  }, [field, fieldLabel, form_pk, options]);
+
+  return (
+    <>
+      {field.kind === KindEnum.TEXT && (
+        <InputFieldPreview
+          handleRemove={onRemove}
+          label={fieldLabel}
+          setLabel={(e) => setFieldLabel(e.target.value)}
+          type="text"
+        />
+      )}
+      {field.kind === KindEnum.DROPDOWN && (
+        <SelectorPreview
+          setOptions={setOptions}
+          options={options}
+          handleRemove={onRemove}
+          label={fieldLabel}
+          setLabel={(e) => setFieldLabel(e.target.value)}
+          type="text"
+        />
+      )}
+
+      {field.kind === KindEnum.RADIO && (
+        <RadioPreview
+          setOptions={setOptions}
+          options={options}
+          handleRemove={onRemove}
+          label={fieldLabel}
+          setLabel={(e) => setFieldLabel(e.target.value)}
+        />
+      )}
+    </>
   );
+};
+
+export const Form: React.FC<FormProps> = ({ id }) => {
+  const [label, setLabel] = useState("");
+  const [kind, setKind] = useState(KindEnum.TEXT);
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState<FormModel | undefined>();
+  const [formFields, setFormFields] = useState<
+    Pagination<FieldModel> | undefined
+  >();
 
   const titleRef = useRef<HTMLInputElement>(null);
-
-  const handleNewFieldChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    dispatch(setNewField(e.target.value));
-
-  const handleNewFieldAddClick = () => {
-    const newInputField = {
-      id: new Date().getTime(),
-      label: newField,
-      ...(kind === "text" && {
-        type: "text",
-      }),
-      ...(kind === "dropdown" && {
-        type: "single",
-      }),
-      kind,
-      value: "",
-    } as Field;
-    dispatch(addInputField(newInputField));
-    dispatch(setNewField(""));
-  };
-
-  const handleInputFieldRemoveClick = (id: number) => () =>
-    dispatch(removeInputField(id));
-
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    dispatch(setFormTitle(e.target.value));
-
-  const handleClearFormClick = () => dispatch(clearForm());
-
-  useEffect(() => {
-    const tId = setTimeout(() => {
-      saveToLocalStorage(formData);
-    }, 1000);
-
-    return () => {
-      saveToLocalStorage(formData);
-      clearTimeout(tId);
-    };
-  }, [formData]);
 
   useEffect(() => {
     const prevTitle = document.title;
@@ -98,114 +97,103 @@ export const Form: React.FC<FormProps> = ({ id }) => {
     };
   }, []);
 
+  useEffect(() => {
+    const tid = setTimeout(async () => {
+      const form = await getForm(id);
+      const formFields = await getFormFields({ form_pk: id });
+      form && setFormData(form);
+      formFields && setFormFields(formFields);
+      setLoading(false);
+    }, 100);
+
+    return () => {
+      clearTimeout(tid);
+    };
+  }, []);
+
+  useEffect(() => {
+    const tid = setTimeout(async () => {
+      if (formData) {
+        await updateForm(formData);
+      }
+    }, 1000);
+
+    return () => {
+      clearTimeout(tid);
+    };
+  }, [formData]);
+
+  if (loading) {
+    return (
+      <div className="my-4 flex items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
   return (
     <div>
       <input
         type="text"
-        className="input"
-        value={formData.title}
+        className="input mb-4"
+        value={formData?.title || ""}
         ref={titleRef}
-        onChange={handleTitleChange}
+        onChange={(e) =>
+          setFormData((prev) =>
+            prev ? { ...prev, title: e.target.value } : undefined
+          )
+        }
       />
-      <div className="border-b border-gray-700 py-2 mb-4">
-        {formData.formFields.map(({ id, label, value, ...other }) => {
-          const handleInputValueChange = (
-            e: React.ChangeEvent<HTMLInputElement>
-          ) => dispatch(setInputField({ id, value: e.target.value }));
-
-          const handleInputRequiredChange = (
-            e: React.ChangeEvent<HTMLInputElement>
-          ) =>
-            dispatch(
-              setInputFieldRequired({
-                id,
-                required: e.target.checked,
+      {formFields?.results
+        .sort((a, b) => (a.id > b.id ? 1 : -1))
+        ?.map((field) => (
+          <MapComp
+            key={field.id}
+            field={field}
+            onRemove={() => {
+              const form_pk = formData?.id;
+              const id = field.id;
+              if (form_pk && id) {
+                deleteFormFields({ form_pk, id }).then(() => {
+                  getFormFields({ form_pk }).then((data) => {
+                    data && setFormFields(data);
+                  });
+                });
+              }
+            }}
+            form_pk={formData?.id}
+          />
+        ))}
+      <div className="flex mb-4 gap-2 items-stretch">
+        <input
+          type="text"
+          className="input w-full"
+          value={label}
+          placeholder="New Field"
+          onChange={(e) => setLabel(e.target.value)}
+        />
+        <Selector
+          options={[...Object.values(KindEnum)]}
+          setValue={(e) => setKind(e.target.value as KindEnum)}
+          value={kind}
+          className="input"
+        />
+        <button
+          className="btn"
+          onClick={() => {
+            formData?.id &&
+              createFormField({
+                form_pk: formData.id,
+                label,
+                kind,
               })
-            );
-
-          const handleInputTypeChange = (
-            e: React.ChangeEvent<HTMLSelectElement>
-          ) =>
-            dispatch(
-              setInputFieldType({ id, type: e.target.value as FieldType })
-            );
-
-          const handleInputOptionsChange = (options: string[]) =>
-            dispatch(setInputFieldOptions({ id, options }));
-
-          return (
-            <div key={id}>
-              {other.kind === "text" && (
-                <InputFieldPreview
-                  handleRemove={handleInputFieldRemoveClick(id)}
-                  setRequired={handleInputRequiredChange}
-                  setType={handleInputTypeChange}
-                  label={label}
-                  type={other.type as InputType}
-                  required={other.required}
-                  setLabel={handleInputValueChange}
-                />
-              )}
-              {other.kind === "dropdown" && (
-                <SelectorPreview
-                  handleRemove={handleInputFieldRemoveClick(id)}
-                  setOptions={handleInputOptionsChange}
-                  options={other.options || []}
-                  required={other.required}
-                  setRequired={handleInputRequiredChange}
-                  setType={handleInputTypeChange}
-                  label={label}
-                  type={other.type as InputType}
-                  setLabel={handleInputValueChange}
-                />
-              )}
-              {other.kind === "radio" && (
-                <RadioPreview
-                  handleRemove={handleInputFieldRemoveClick(id)}
-                  setOptions={handleInputOptionsChange}
-                  options={other.options || []}
-                  required={other.required}
-                  setRequired={handleInputRequiredChange}
-                  setType={handleInputTypeChange}
-                  label={label}
-                  setLabel={handleInputValueChange}
-                />
-              )}
-              {other.kind === "longText" && (
-                <LongTextPreview
-                  handleRemove={handleInputFieldRemoveClick(id)}
-                  required={other.required}
-                  setRequired={handleInputRequiredChange}
-                  label={label}
-                  setLabel={handleInputValueChange}
-                />
-              )}
-            </div>
-          );
-        })}
+                .then(() => getFormFields({ form_pk: formData.id }))
+                .then((data) => data && setFormFields(data));
+          }}
+        >
+          Add
+        </button>
       </div>
-
-      <div className="flex flex-col">
-        <label className="text-left mb-2 flex-1">Add New Field</label>
-        <div className="flex gap-4 items-stretch mb-8">
-          <input
-            className="input"
-            type="text"
-            value={newField}
-            onChange={handleNewFieldChange}
-          />
-          <Selector
-            options={[...KIND]}
-            value={kind}
-            setValue={(e) => dispatch(setKind(e.target.value as KindType))}
-            className="input"
-          />
-          <button className="btn" onClick={handleNewFieldAddClick}>
-            Add
-          </button>
-        </div>
-      </div>
-
       <div className="flex gap-2 justify-between">
         <button
           className="btn flex-1 bg-gray-800 mb-8 p-2"
@@ -215,24 +203,24 @@ export const Form: React.FC<FormProps> = ({ id }) => {
         </button>
         <button
           className="btn bg-gray-800 mb-8 p-2 flex-1"
-          onClick={handleClearFormClick}
+          // onClick={handleClearFormClick}
         >
           Clear
         </button>
         <button
           className="btn bg-green-500 mb-8 p-2 flex-1"
-          onClick={(_) => saveToLocalStorage(formData)}
+          // onClick={(_) => saveToLocalStorage(formData)}
         >
           Save
         </button>
-        {formData.formFields.length ? (
+        {/* {formData.formFields.length ? (
           <button
             className="btn bg-indigo-500 mb-8 p-2 flex-1"
             onClick={(_) => navigate(`/forms/${id}/preview`)}
           >
             Preview
           </button>
-        ) : null}
+        ) : null} */}
 
         <button className="btn mb-8 p-2 flex-1">Submit</button>
       </div>

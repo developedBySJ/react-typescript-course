@@ -1,4 +1,5 @@
 import { Field, FieldType, KindType } from "./field.type";
+import { FieldModel } from "./model";
 
 export type SetKindAction = {
   type: "set_kind";
@@ -12,7 +13,7 @@ export type SetNewFieldAction = {
 
 export type AddNewInputFieldAction = {
   type: "add_input_field";
-  payload: Field;
+  payload: FieldModel;
 };
 
 export type RemoveInputFieldAction = {

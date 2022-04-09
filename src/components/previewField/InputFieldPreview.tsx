@@ -8,8 +8,8 @@ interface InputFieldProps {
   type: InputType;
   required?: boolean;
   setLabel: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  setType: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  setRequired: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  setType?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  setRequired?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleRemove: () => void;
 }
 
@@ -32,12 +32,12 @@ export const InputFieldPreview: React.FC<InputFieldProps> = ({
           value={label}
           onChange={setLabel}
         />
-        <Selector
+        {/* <Selector
           value={type}
           className="input flex-shrink w-40"
           options={[...inputType]}
-          setValue={setType}
-        />
+          setValue={(e) => setType && setType(e)}
+        /> */}
       </div>
       <div className="flex items-center gap-4">
         <button
@@ -46,10 +46,10 @@ export const InputFieldPreview: React.FC<InputFieldProps> = ({
         >
           remove
         </button>
-        <label className="flex items-center gap-2">
+        {/* <label className="flex items-center gap-2">
           <input type="checkbox" checked={!!required} onChange={setRequired} />
           Required
-        </label>
+        </label> */}
       </div>
     </div>
   );

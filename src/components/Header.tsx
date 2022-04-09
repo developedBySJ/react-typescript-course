@@ -7,6 +7,10 @@ const navigation = [
     name: "Home",
     path: "/",
   },
+  {
+    name: "Login",
+    path: "/login",
+  },
 ];
 
 export const Header: React.FC = () => {

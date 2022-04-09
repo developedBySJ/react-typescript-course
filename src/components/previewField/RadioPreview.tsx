@@ -7,8 +7,8 @@ interface RadioPreviewProps {
   options: string[];
 
   setLabel: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  setType: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  setRequired: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  setType?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  setRequired?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   setOptions: (options: string[]) => void;
   handleRemove: () => void;
 }
@@ -45,10 +45,10 @@ export const RadioPreview: React.FC<RadioPreviewProps> = ({
         >
           remove
         </button>
-        <label className="flex items-center gap-2">
+        {/* <label className="flex items-center gap-2">
           <input type="checkbox" checked={!!required} onChange={setRequired} />
           Required
-        </label>
+        </label> */}
       </div>
     </div>
   );

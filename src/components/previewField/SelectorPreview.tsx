@@ -6,13 +6,13 @@ import { Selector } from "./Selector";
 
 interface InputFieldProps {
   label: string;
-  type: InputType;
+  type?: InputType;
   required?: boolean;
   options: string[];
 
   setLabel: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  setType: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  setRequired: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  setType?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  setRequired?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   setOptions: (options: string[]) => void;
   handleRemove: () => void;
 }
@@ -38,12 +38,12 @@ export const SelectorPreview: React.FC<InputFieldProps> = ({
           value={label}
           onChange={setLabel}
         />
-        <Selector
+        {/* <Selector
           value={type}
           className="input flex-shrink w-40"
           options={[...selectType]}
           setValue={setType}
-        />
+        /> */}
       </div>
       <div className="my-4">
         <h1>Options</h1>
@@ -56,10 +56,10 @@ export const SelectorPreview: React.FC<InputFieldProps> = ({
         >
           remove
         </button>
-        <label className="flex items-center gap-2">
+        {/* <label className="flex items-center gap-2">
           <input type="checkbox" checked={!!required} onChange={setRequired} />
           Required
-        </label>
+        </label> */}
       </div>
     </div>
   );
