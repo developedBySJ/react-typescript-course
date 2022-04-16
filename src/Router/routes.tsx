@@ -1,7 +1,8 @@
-import { Form } from "../components/Form";
-import { ListForms } from "../components/ListForms";
-import { LoginPage } from "../components/Login";
-import { PreviewForm } from "../components/PreviewForm";
+import React from "react";
+const Form = React.lazy(() => import("../components/Form"));
+const LoginPage = React.lazy(() => import("../components/Login"));
+const PreviewForm = React.lazy(() => import("../components/PreviewForm"));
+const ListForms = React.lazy(() => import("../components/ListForms"));
 
 export const routes = {
   "/": () => <ListForms />,

@@ -85,7 +85,7 @@ const MapComp: React.FC<{
   );
 };
 
-export const Form: React.FC<FormProps> = ({ id }) => {
+const Form: React.FC<FormProps> = ({ id }) => {
   const [label, setLabel] = useState("");
   const [kind, setKind] = useState(KindEnum.TEXT);
   const [loading, setLoading] = useState(true);
@@ -238,3 +238,5 @@ export const Form: React.FC<FormProps> = ({ id }) => {
     </div>
   );
 };
+
+export default Form;

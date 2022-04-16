@@ -17,7 +17,7 @@ interface AnsState {
   question: string;
 }
 
-export const PreviewForm: React.FC<PreviewFormProps> = ({ id }) => {
+const PreviewForm: React.FC<PreviewFormProps> = ({ id }) => {
   const [form, setForm] = useState<FormModel | undefined>();
   const [formFields, setFormFields] = useState<
     Pagination<FieldModel> | undefined
@@ -154,3 +154,5 @@ export const PreviewForm: React.FC<PreviewFormProps> = ({ id }) => {
     </div>
   );
 };
+
+export default PreviewForm;

@@ -25,8 +25,7 @@ const validator = (form: Login) => {
 
   return errors;
 };
-
-export const LoginPage = () => {
+const LoginPage = () => {
   const [form, setForm] = useState(initialState);
   const [errors, setErrors] = useState<ReturnType<typeof validator>>({});
 
@@ -105,3 +104,5 @@ export const LoginPage = () => {
     </>
   );
 };
+
+export default LoginPage;

@@ -8,7 +8,7 @@ import { FieldModel, FormModel } from "../types/model";
 import { getForms } from "../api/form";
 import { Spinner } from "./Spinner";
 
-export const ListForms: React.FC = () => {
+const ListForms: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [forms, setForms] = React.useState<FormModel[]>([]);
   const [{ search }, setQuery] = useQueryParams<{ search: string }>();
@@ -86,3 +86,5 @@ export const ListForms: React.FC = () => {
     </div>
   );
 };
+
+export default ListForms;

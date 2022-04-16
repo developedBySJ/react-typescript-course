@@ -1,10 +1,7 @@
 import { navigate, useFullPath, useRoutes } from "raviger";
-import React, { useEffect, useState } from "react";
-import { request } from "./api/request";
+import { Suspense, useEffect, useState } from "react";
 import { AppContainer } from "./components/AppContainer";
-import { Form } from "./components/Form";
-import { Header } from "./components/Header";
-import { ListForms } from "./components/ListForms";
+import { Spinner } from "./components/Spinner";
 import { routes } from "./Router/routes";
 import { GlobalProvider, initialGlobal } from "./utils/currentUser.context";
 
@@ -38,7 +35,9 @@ function App() {
   }, [path]);
   return (
     <GlobalProvider value={{ setState: setGlobal, state: global }}>
-      <AppContainer>{routeResult}</AppContainer>
+      <AppContainer>
+        <Suspense fallback={<Spinner />}>{routeResult}</Suspense>
+      </AppContainer>
     </GlobalProvider>
   );
 }
