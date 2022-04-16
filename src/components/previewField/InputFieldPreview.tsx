@@ -5,7 +5,7 @@ import { Selector } from "./Selector";
 
 interface InputFieldProps {
   label: string;
-  type: InputType;
+  type: string;
   required?: boolean;
   setLabel: (e: React.ChangeEvent<HTMLInputElement>) => void;
   setType?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
@@ -24,7 +24,7 @@ export const InputFieldPreview: React.FC<InputFieldProps> = ({
 }) => {
   return (
     <div className="my-4 border-b border-gray-500 py-4">
-      <h1 className="text-gray-500 mb-2">Input Field</h1>
+      <h1 className="text-gray-500 mb-2">Input Field ({type})</h1>
       <div className="flex items-center gap-2">
         <input
           type="text"

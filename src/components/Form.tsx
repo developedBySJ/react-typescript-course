@@ -53,6 +53,14 @@ const MapComp: React.FC<{
           type="text"
         />
       )}
+      {field.kind === KindEnum.GENERIC && (
+        <InputFieldPreview
+          handleRemove={onRemove}
+          label={fieldLabel}
+          setLabel={(e) => setFieldLabel(e.target.value)}
+          type="Location"
+        />
+      )}
       {field.kind === KindEnum.DROPDOWN && (
         <SelectorPreview
           setOptions={setOptions}
@@ -164,7 +172,24 @@ export const Form: React.FC<FormProps> = ({ id }) => {
             form_pk={formData?.id}
           />
         ))}
-      <div className="flex mb-4 gap-2 items-stretch">
+      <form
+        className="flex mb-4 gap-2 items-stretch"
+        onSubmit={(e) => {
+          e.preventDefault();
+          formData?.id &&
+            createFormField({
+              form_pk: formData.id,
+              label,
+              kind,
+              meta: {
+                type: "date",
+              },
+            })
+              .then(() => getFormFields({ form_pk: formData.id }))
+              .then((data) => data && setFormFields(data))
+              .then((_) => setLabel(""));
+        }}
+      >
         <input
           type="text"
           className="input w-full"
@@ -178,22 +203,8 @@ export const Form: React.FC<FormProps> = ({ id }) => {
           value={kind}
           className="input"
         />
-        <button
-          className="btn"
-          onClick={() => {
-            formData?.id &&
-              createFormField({
-                form_pk: formData.id,
-                label,
-                kind,
-              })
-                .then(() => getFormFields({ form_pk: formData.id }))
-                .then((data) => data && setFormFields(data));
-          }}
-        >
-          Add
-        </button>
-      </div>
+        <button className="btn">Add</button>
+      </form>
       <div className="flex gap-2 justify-between">
         <button
           className="btn flex-1 bg-gray-800 mb-8 p-2"
@@ -213,14 +224,14 @@ export const Form: React.FC<FormProps> = ({ id }) => {
         >
           Save
         </button>
-        {/* {formData.formFields.length ? (
+        {formFields?.results.length ? (
           <button
             className="btn bg-indigo-500 mb-8 p-2 flex-1"
             onClick={(_) => navigate(`/forms/${id}/preview`)}
           >
             Preview
           </button>
-        ) : null} */}
+        ) : null}
 
         <button className="btn mb-8 p-2 flex-1">Submit</button>
       </div>

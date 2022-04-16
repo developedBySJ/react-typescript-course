@@ -1,6 +1,11 @@
-import React, { useState } from "react";
-import { getFromLocalStorage } from "../utils/storageUtils";
+import React, { useEffect, useState } from "react";
+import MapPicker from "react-google-map-picker";
+import { getForm, getFormFields } from "../api/form";
+import { Pagination } from "../types/api.action";
+import { FieldModel, FormModel, KindEnum } from "../types/model";
+import { MapPreview } from "./previewField/MapPreview";
 import { Selector } from "./previewField/Selector";
+import { Spinner } from "./Spinner";
 
 interface PreviewFormProps {
   id: number;
@@ -13,23 +18,48 @@ interface AnsState {
 }
 
 export const PreviewForm: React.FC<PreviewFormProps> = ({ id }) => {
-  const form = getFromLocalStorage(id);
+  const [form, setForm] = useState<FormModel | undefined>();
+  const [formFields, setFormFields] = useState<
+    Pagination<FieldModel> | undefined
+  >();
+  const [loading, setLoading] = useState(true);
   const [ans, setAns] = useState<AnsState[]>(
     () =>
-      form?.formFields.map(({ id, label }) => ({
+      formFields?.results.map(({ id, label }) => ({
         id,
         question: label,
         ans: "",
       })) || []
   );
 
+  useEffect(() => {
+    const tid = setTimeout(async () => {
+      const form = await getForm(id);
+      const formFields = await getFormFields({ form_pk: id });
+      form && setForm(form);
+      formFields && setFormFields(formFields);
+      setLoading(false);
+    }, 100);
+
+    return () => {
+      clearTimeout(tid);
+    };
+  }, []);
+
   const [curQuestion, setCurQuestion] = useState(0);
 
-  if (!form?.formFields.length) {
+  if (loading)
+    return (
+      <div className="flex justify-center my-8">
+        <Spinner />
+      </div>
+    );
+
+  if (!formFields?.results.length) {
     return <div>No questions</div>;
   }
 
-  const question = form.formFields[curQuestion];
+  const question = formFields.results[curQuestion];
 
   const handleValue = (value: string) => {
     setAns((prev) =>
@@ -41,43 +71,45 @@ export const PreviewForm: React.FC<PreviewFormProps> = ({ id }) => {
   // console.log(ans);
   return (
     <div>
-      <h1 className="text-xl font-bold mb-8">{form.title}</h1>
+      <h1 className="text-xl font-bold mb-8">{form?.title}</h1>
       <div className="mb-8">
         <label className="mb-2 block">
           {question.label}{" "}
-          {question.required && <span className="text-red-500">*</span>}
+          {question?.meta?.required && <span className="text-red-500">*</span>}
         </label>
-        {question.kind === "text" && (
+        {question.kind === KindEnum.TEXT && (
           <input
-            type={question.type || "text"}
+            type={"text"}
             className="input"
-            required={!!question.required}
+            required={!!question?.meta?.required}
             value={value}
             onChange={(e) => handleValue(e.target.value)}
           />
         )}
-        {question.kind === "longText" && (
+        {/* {question.kind === "longText" && (
           <textarea
             className="input"
             required={!!question.required}
             value={value}
             onChange={(e) => handleValue(e.target.value)}
           />
-        )}
+        )} */}
 
-        {question.kind === "dropdown" && (
+        {question.kind === KindEnum.DROPDOWN && (
           <Selector
             className="input"
-            options={question.options}
+            options={question.options || []}
             value={value}
             setValue={(e) => handleValue(e.target.value)}
-            multiple={question.type === "multiple"}
+            multiple={false}
           />
         )}
 
-        {question.kind === "radio" && (
+        {question.kind === KindEnum.GENERIC && <MapPreview />}
+
+        {question.kind === KindEnum.RADIO && (
           <div>
-            {question.options.map((q, i) => {
+            {question?.options?.map((q, i) => {
               return (
                 <label className="flex items-center gap-4 my-2" key={i}>
                   <input
@@ -108,12 +140,12 @@ export const PreviewForm: React.FC<PreviewFormProps> = ({ id }) => {
           className="btn disabled:opacity-50"
           onClick={() =>
             setCurQuestion((prev) =>
-              Math.min(prev + 1, form.formFields.length - 1)
+              Math.min(prev + 1, formFields.results.length - 1)
             )
           }
           disabled={
-            curQuestion === form.formFields.length - 1 ||
-            (question.required && value.length === 0)
+            curQuestion === formFields.results.length - 1 ||
+            (question?.meta?.required && value.length === 0)
           }
         >
           Next

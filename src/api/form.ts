@@ -42,6 +42,7 @@ export const getFormFields = async ({ form_pk }: GetFormFields) => {
 interface CreateFormField extends Pick<FieldModel, "kind" | "label"> {
   form_pk: number;
   options?: string[];
+  meta: Record<string, any>;
 }
 export const createFormField = async ({
   form_pk,

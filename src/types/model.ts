@@ -19,7 +19,7 @@ export interface FieldModel {
   id: number;
   label: string;
   kind: KindEnum;
-  options: any;
+  options: string[] | null;
   value: string;
   meta: any;
 }
