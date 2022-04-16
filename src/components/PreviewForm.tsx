@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import MapPicker from "react-google-map-picker";
 import { getForm, getFormFields } from "../api/form";
 import { Pagination } from "../types/api.action";
 import { FieldModel, FormModel, KindEnum } from "../types/model";
@@ -44,6 +43,7 @@ const PreviewForm: React.FC<PreviewFormProps> = ({ id }) => {
     return () => {
       clearTimeout(tid);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [curQuestion, setCurQuestion] = useState(0);

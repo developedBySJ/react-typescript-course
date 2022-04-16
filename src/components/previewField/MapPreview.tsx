@@ -8,6 +8,7 @@ const defaultLocation = {
 
 export const MapPreview = () => {
   const [location, setLocation] = useState(defaultLocation);
+  console.log(location);
   return (
     <MapPicker
       className="input"

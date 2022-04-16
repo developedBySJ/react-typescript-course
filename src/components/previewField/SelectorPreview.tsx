@@ -1,8 +1,7 @@
 import React from "react";
 
-import { selectType, InputType } from "../../types/field.type";
+import { InputType } from "../../types/field.type";
 import { Options } from "./Options";
-import { Selector } from "./Selector";
 
 interface InputFieldProps {
   label: string;

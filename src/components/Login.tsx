@@ -1,8 +1,7 @@
 import { navigate } from "raviger";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { request } from "../api/request";
 import { Errors, Login } from "../types/api.action";
-import { globalContext } from "../utils/currentUser.context";
 
 const initialState = {
   username: "",

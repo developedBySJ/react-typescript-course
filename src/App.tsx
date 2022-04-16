@@ -10,7 +10,6 @@ function App() {
   const path = useFullPath();
   const [global, setGlobal] = useState(initialGlobal.state);
   const refreshToken = async () => {
-    const refresh = localStorage.getItem("REFRESH_TOKEN");
     // try {
     //   const { access } = await request("/token/refresh", "POST", { refresh });
     //   localStorage.setItem("TOKEN", access);
